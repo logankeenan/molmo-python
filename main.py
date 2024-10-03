@@ -14,11 +14,16 @@ print(f"Current device: {torch.cuda.current_device()}")
 # Timing starts before loading the processor
 start_time = time.time()
 
+torch_dtype = "auto"
+print("torch_dtype: ", torch_dtype)
+
 # Load the processor
+model_name = 'allenai/Molmo-7B-D-0924'
+print("model name: ", model_name)
 processor = AutoProcessor.from_pretrained(
-    'allenai/Molmo-7B-D-0924',
+    model_name,
     trust_remote_code=True,
-    torch_dtype='auto',
+    torch_dtype=torch_dtype,
     device_map='cpu'
 )
 
@@ -26,7 +31,8 @@ processor = AutoProcessor.from_pretrained(
 processor_load_time = time.time()
 print(f"Processor load time: {processor_load_time - start_time:.2f} ms")
 
-arguments = {"device_map": "cuda", "torch_dtype": "auto", "trust_remote_code": True}
+
+arguments = {"device_map": "cuda", "torch_dtype": torch_dtype, "trust_remote_code": True}
 quantization_config = BitsAndBytesConfig(
     load_in_4bit=True,
     bnb_4bit_quant_type="fp4",
@@ -36,7 +42,7 @@ arguments["quantization_config"] = quantization_config
 
 # Load the model
 model = AutoModelForCausalLM.from_pretrained(
-    'allenai/Molmo-7B-D-0924',
+    model_name,
     **arguments
 )
 
@@ -65,6 +71,8 @@ print(f"Input processing time: {input_process_time - input_start_time:.2f} ms")
 # Start timing for generation
 generation_start_time = time.time()
 
+#model.to(dtype=torch.bfloat16)
+#inputs["images"] = inputs["images"].to(torch.bfloat16)
 # Generate output; maximum 200 new tokens; stop generation when <|endoftext|> is generated
 output = model.generate_from_batch(
     inputs,
