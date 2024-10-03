@@ -1,6 +1,5 @@
 from transformers import AutoModelForCausalLM, AutoProcessor, GenerationConfig
 from PIL import Image
-import requests
 
 # load the processor
 processor = AutoProcessor.from_pretrained(
@@ -20,8 +19,8 @@ model = AutoModelForCausalLM.from_pretrained(
 
 # process the image and text
 inputs = processor.process(
-    images=[Image.open(requests.get("https://picsum.photos/id/237/536/354", stream=True).raw)],
-    text="Describe this image."
+    images=[Image.open("img.png")],
+    text="What is the point coordinate of the sign up button. ONly include the json response in the output {x, y}"
 )
 
 # move inputs to the correct device and make a batch of size 1
