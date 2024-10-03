@@ -1,27 +1,40 @@
-from transformers import AutoModelForCausalLM, AutoProcessor, GenerationConfig
+from transformers import AutoModelForCausalLM, AutoProcessor, GenerationConfig, BitsAndBytesConfig
 from PIL import Image
-import requests
+import torch
+import os
+
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+
+print(f"Is CUDA available: {torch.cuda.is_available()}")
+print(f"CUDA device name: {torch.cuda.get_device_name(0)}")
+print(f"Current device: {torch.cuda.current_device()}")
+
+torch.cuda.empty_cache()
 
 # load the processor
 processor = AutoProcessor.from_pretrained(
-    'allenai/Molmo-7B-D-0924',
+    'allenai/Molmo-7B-O-0924',
     trust_remote_code=True,
     torch_dtype='auto',
-    device_map='auto'
+    device_map='cuda'
 )
 
-# load the model
-model = AutoModelForCausalLM.from_pretrained(
-    'allenai/Molmo-7B-D-0924',
-    trust_remote_code=True,
-    torch_dtype='auto',
-    device_map='auto'
+arguments = {"device_map": "cuda", "torch_dtype": "auto", "trust_remote_code": True}
+quantization_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_quant_type="fp4",
+    bnb_4bit_use_double_quant=False,
 )
+arguments["quantization_config"] = quantization_config
+
+
+# load the model
+model = AutoModelForCausalLM.from_pretrained("allenai/Molmo-7B-O-0924", **arguments)
 
 # process the image and text
 inputs = processor.process(
-    images=[Image.open(requests.get("https://picsum.photos/id/237/536/354", stream=True).raw)],
-    text="Describe this image."
+    images=[Image.open("img.png")],
+    text="what is the point coordinate of the sign up button. Only include the json response in the output {x, y}"
 )
 
 # move inputs to the correct device and make a batch of size 1
