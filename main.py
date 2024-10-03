@@ -7,10 +7,6 @@ import torch
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 torch.cuda.empty_cache()
 
-print(f"Is CUDA available: {torch.cuda.is_available()}")
-print(f"CUDA device name: {torch.cuda.get_device_name(0)}")
-print(f"Current device: {torch.cuda.current_device()}")
-
 # Timing starts before loading the processor
 start_time = time.time()
 
