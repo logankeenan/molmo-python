@@ -1,5 +1,5 @@
 import time
-from transformers import AutoModelForCausalLM, AutoProcessor, GenerationConfig
+from transformers import AutoModelForCausalLM, AutoProcessor, GenerationConfig, BitsAndBytesConfig
 from PIL import Image
 import os
 import torch
@@ -26,12 +26,18 @@ processor = AutoProcessor.from_pretrained(
 processor_load_time = time.time()
 print(f"Processor load time: {processor_load_time - start_time:.2f} ms")
 
+arguments = {"device_map": "cuda", "torch_dtype": "auto", "trust_remote_code": True}
+quantization_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_quant_type="fp4",
+    bnb_4bit_use_double_quant=False,
+)
+arguments["quantization_config"] = quantization_config
+
 # Load the model
 model = AutoModelForCausalLM.from_pretrained(
     'allenai/Molmo-7B-D-0924',
-    trust_remote_code=True,
-    torch_dtype='auto',
-    device_map='cpu'
+    **arguments
 )
 
 # Measure the time taken to load the model
